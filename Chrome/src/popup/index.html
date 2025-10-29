@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Studio Exporter</title>
+    <!-- <script src="../../browser-polyfill.js"></script> -->
+    <style>
+      :root {
+        --primary-hue: 200;
+        --bg-gradient-1: hsl(199, 13%, 39%);
+        --bg-gradient-2: hsl(190, 13%, 47%);
+        --bg-gradient-3: hsl(209, 13%, 47%);
+        --glass-bg: rgba(255, 255, 255, 0.12);
+        --glass-bg-hover: rgba(255, 255, 255, 0.18);
+        --glass-border: rgba(255, 255, 255, 0.35);
+        --glass-inner-glow: rgba(255, 255, 255, 0.5);
+        --text-primary: rgba(255, 255, 255, 0.98);
+        --text-secondary: rgba(255, 255, 255, 0.75);
+        --shadow-ambient: rgba(0, 0, 0, 0.12);
+        --shadow-layer: rgba(0, 0, 0, 0.08);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        width: 360px;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        background: 
+          radial-gradient(circle at 20% 80%, var(--bg-gradient-3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, var(--bg-gradient-2) 0%, transparent 50%),
+          linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+        padding: 16px;
+        padding-bottom: 24px;
+        position: relative;
+        overflow-x: hidden;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      body::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: 
+          radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.08) 0%, transparent 25%),
+          radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.05) 0%, transparent 30%);
+        animation: floatingLight 20s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      @keyframes floatingLight {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        50% { transform: translate(-5%, 5%) rotate(180deg); }
+      }
+
+      .container {
+        background: var(--glass-bg);
+        backdrop-filter: blur(32px) saturate(200%);
+        -webkit-backdrop-filter: blur(32px) saturate(200%);
+        border-radius: 28px;
+        border: 1px solid var(--glass-border);
+        padding: 28px 20px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 
+          0 8px 32px var(--shadow-ambient),
+          inset 0 1px 0 var(--glass-inner-glow),
+          0 1px 0 rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+        flex: 1;
+      }
+
+      .container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 120px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+        pointer-events: none;
+        border-radius: 28px 28px 0 0;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 24px;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .icon-container {
+        width: 68px;
+        height: 68px;
+        margin: 0 auto 14px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 
+          inset 0 1px 2px rgba(255, 255, 255, 0.6),
+          0 8px 24px rgba(0, 0, 0, 0.15),
+          0 2px 6px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .icon-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.15) 50%, transparent 70%);
+        animation: shimmer 6s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
+        50% { transform: translateX(100%) translateY(100%) rotate(360deg); }
+      }
+
+      .icon-container:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 
+          inset 0 1px 2px rgba(255, 255, 255, 0.7),
+          0 12px 32px rgba(0, 0, 0, 0.2),
+          0 4px 8px rgba(0, 0, 0, 0.12);
+      }
+
+      .icon-container svg {
+        width: 36px;
+        height: 36px;
+        color: white;
+        filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+        position: relative;
+        z-index: 1;
+      }
+
+      h2 {
+        color: var(--text-primary);
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        margin-bottom: 4px;
+      }
+
+      p.subtitle {
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: -0.1px;
+      }
+
+      /* Enhanced Details/Summary */
+      .features-details, .settings-details {
+        margin-bottom: 20px;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .features-summary, .settings-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 13px 16px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 16px;
+        cursor: pointer;
+        list-style: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 
+          inset 0 1px 0 rgba(255, 255, 255, 0.4),
+          0 2px 8px var(--shadow-layer);
+      }
+
+      .features-summary:hover, .settings-summary:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.12) 100%);
+        border-color: rgba(255, 255, 255, 0.35);
+        transform: translateY(-1px);
+        box-shadow: 
+          inset 0 1px 0 rgba(255, 255, 255, 0.5),
+          0 4px 16px var(--shadow-ambient);
+      }
+
+      .features-summary::-webkit-details-marker,
+      .settings-summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .summary-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.2px;
+      }
+
+      .summary-icon {
+        width: 18px;
+        height: 18px;
+        color: var(--text-secondary);
+        margin-right: 10px;
+      }
+
+      .summary-content {
+        display: flex;
+        align-items: center;
+      }
+
+      .summary-chevron {
+        width: 18px;
+        height: 18px;
+        color: var(--text-secondary);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .features-details[open] .summary-chevron,
+      .settings-details[open] .summary-chevron {
+        transform: rotate(180deg);
+      }
+
+      .features-content, .settings-content {
+        padding-top: 10px;
+        animation: expandDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes expandDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .feature {
+        display: flex;
+        align-items: center;
+        padding: 11px 14px;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .feature:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%);
+        transform: translateX(4px);
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+
+      .feature:last-child {
+        margin-bottom: 0;
+      }
+
+      .feature-icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 12px;
+        color: rgba(255, 255, 255, 0.95);
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+      }
+
+      .feature-text {
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: -0.1px;
+      }
+
+      /* Settings toggles */
+      .settings-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .toggle-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .toggle-container:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%);
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+
+      .toggle-label {
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: -0.1px;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.25);
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+        border-radius: 24px;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 2.5px;
+        background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+        border-radius: 50%;
+        box-shadow: 
+          0 2px 6px rgba(0, 0, 0, 0.3),
+          0 1px 2px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      input:checked + .slider {
+        background: linear-gradient(135deg, rgba(120, 180, 200, 0.85) 0%, rgba(100, 160, 180, 0.85) 100%);
+        box-shadow: 
+          inset 0 2px 6px rgba(0, 0, 0, 0.2),
+          0 0 12px rgba(120, 180, 200, 0.3);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(20px);
+        box-shadow: 
+          0 3px 8px rgba(0, 0, 0, 0.35),
+          0 2px 4px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      .main-controls {
+        margin-top: auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      #exportBtn {
+        width: 100%;
+        padding: 16px;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.2px;
+        color: white;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.18) 100%);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1.5px solid rgba(255, 255, 255, 0.4);
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 
+          0 6px 24px rgba(0, 0, 0, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6),
+          0 2px 8px rgba(0, 0, 0, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #exportBtn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+      }
+
+      #exportBtn:hover::before {
+        left: 100%;
+      }
+
+      #exportBtn:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 
+          0 12px 36px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          0 4px 12px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.22) 100%);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      #exportBtn:active {
+        transform: translateY(-1px) scale(0.98);
+        box-shadow: 
+          0 4px 16px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5),
+          0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-icon {
+        width: 20px;
+        height: 20px;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+      }
+
+      .status {
+        margin-top: 14px;
+        padding: 12px 14px;
+        background: rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 12px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        text-align: center;
+        display: none;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .status.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: statusFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes statusFadeIn {
+        from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        border-top-color: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin-right: 8px;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+details > *:not(summary) {
+  animation: expandDown 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes expandDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+details[open] .summary-text {
+  animation: fadeInSmooth 0.3s ease-out;
+}
+
+@keyframes fadeInSmooth {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+details {
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.summary-chevron {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.social-links {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+
+.social-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px var(--shadow-layer), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.social-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.social-btn:hover::before {
+  left: 100%;
+}
+
+.social-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.12) 100%);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--shadow-ambient), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.social-btn:active {
+  transform: translateY(0px) scale(0.98);
+  box-shadow: 0 2px 8px var(--shadow-layer), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.social-icon {
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.footer {
+  margin-top: 20px;
+  padding: 16px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.footer-text {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.footer-author {
+  color: var(--text-primary);
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+      <div class="header">
+        <div class="icon-container">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+        </div>
+        <h2>AI Studio Exporter</h2>
+        <p class="subtitle">Экспорт чата с медиафайлами</p>
+      </div>
+
+      <details class="features-details">
+        <summary class="features-summary">
+          <div class="summary-content">
+            <svg class="summary-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
+            </svg>
+            <span class="summary-text">Возможности</span>
+          </div>
+          <svg class="summary-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </summary>
+        <div class="features-content">
+          <div class="feature">
+            <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            <span class="feature-text">Сохранение в Markdown</span>
+          </div>
+          <div class="feature">
+            <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+            </svg>
+            <span class="feature-text">Загрузка изображений</span>
+          </div>
+          <div class="feature">
+            <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+            </svg>
+            <span class="feature-text">Упаковка в ZIP архив</span>
+          </div>
+        </div>
+      </details>
+
+      <details class="settings-details">
+        <summary class="settings-summary">
+          <div class="summary-content">
+            <svg class="summary-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            <span class="summary-text">Настройки экспорта</span>
+          </div>
+          <svg class="summary-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </summary>
+        <div class="settings-content">
+          <div class="toggle-container">
+            <label class="toggle-label" for="mediaToggle">Скачать с медиа (.zip)</label>
+            <label class="switch">
+              <input type="checkbox" id="mediaToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-container">
+            <label class="toggle-label" for="thoughtsToggle">Раздумья модели</label>
+            <label class="switch">
+              <input type="checkbox" id="thoughtsToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-container">
+            <label class="toggle-label" for="blockedToggle">Заблокированный контент</label>
+            <label class="switch">
+              <input type="checkbox" id="blockedToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </details>
+
+      <div class="main-controls">
+        <button id="exportBtn">
+          <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          <span>Скачать чат</span>
+        </button>
+        <div class="status" id="status"></div>
+      </div>
+
+<div class="social-links">
+  <a href="https://github.com/MKultra6969" target="_blank" rel="noopener noreferrer" class="social-btn">
+    <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+    </svg>
+    <span>GitHub</span>
+  </a>
+  <a href="https://mk69.su" target="_blank" rel="noopener noreferrer" class="social-btn">
+    <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/>
+    </svg>
+    <span>Website</span>
+  </a>
+</div>
+
+<div class="footer">
+  <span class="footer-text">С ненавистью by <span class="footer-author">mkultra69</span></span>
+</div>
+
+
+    </div>
+    <script type="module" src="../popup.ts"></script>
+</body>
+</html>
+
+<!-- 
+Google AI Studio Chat Exporter
+Author: mkultra69
+GitHub: https://github.com/MKultra6969
+Website: https://mk69.su
+-->

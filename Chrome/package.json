@@ -1,0 +1,24 @@
+{
+  "name": "mkaistudioexporter",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:firefox": "npm run build && node scripts/fix-firefox-manifest.js",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.2.1",
+    "@types/chrome": "^0.1.27",
+    "@types/webextension-polyfill": "^0.12.4",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vite-plugin-static-copy": "^3.1.4"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "webextension-polyfill": "^0.12.0"
+  }
+}
